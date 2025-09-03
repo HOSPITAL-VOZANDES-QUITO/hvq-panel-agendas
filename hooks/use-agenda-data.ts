@@ -75,18 +75,31 @@ export function useAgendaData() {
   // Cargar pisos de todos los edificios cuando se cargan los edificios
   useEffect(() => {
     if (buildings.length > 0) {
-      buildings.forEach(async (building) => {
-        if (building.codigo_edificio && !buildingFloors[building.codigo_edificio.toString()]) {
-          console.log('Cargando pisos para edificio:', building.descripcion_edificio, building.codigo_edificio)
-          const pisos = await loadBuildingFloors(building.codigo_edificio.toString())
+      // Priorizar la carga del edificio 2 (por defecto)
+      const edificio2 = buildings.find(b => b.codigo_edificio === 2)
+      if (edificio2 && !buildingFloors['2']) {
+        console.log('🏢 Cargando pisos para edificio 2 (prioritario):', edificio2.descripcion_edificio)
+        loadBuildingFloors(2).then(pisos => {
           setBuildingFloors(prev => ({
             ...prev,
-            [building.codigo_edificio.toString()]: pisos
+            '2': pisos
+          }))
+        })
+      }
+      
+      // Cargar pisos para el resto de edificios
+      buildings.forEach(async (building) => {
+        if (building.codigo_edificio && building.codigo_edificio !== 2 && !buildingFloors[building.codigo_edificio.toString()]) {
+          console.log('Cargando pisos para edificio:', building.descripcion_edificio, building.codigo_edificio)
+          const pisos = await loadBuildingFloors(building.codigo_edificio)
+          setBuildingFloors(prev => ({
+            ...prev,
+            [building.codigo_edificio!.toString()]: pisos
           }))
         }
       })
     }
-  }, [buildings, loadBuildingFloors])
+  }, [buildings, loadBuildingFloors, buildingFloors])
 
   // Combinar datos de médicos y agendas
   useEffect(() => {
@@ -134,7 +147,7 @@ export function useAgendaData() {
             agendaId: agenda.codigo_agenda,
             codigoEdificio,
             codigoPiso: consultorio.codigo_piso,
-            pisosEnCache: buildingFloors[codigoEdificio]?.length || 0
+            pisosEnCache: codigoEdificio ? buildingFloors[codigoEdificio]?.length || 0 : 0
           })
           
           if (codigoEdificio && buildingFloors[codigoEdificio]) {
@@ -262,23 +275,23 @@ export function useAgendaData() {
 
     const building = buildings.find((e: Edificio) => 
       e.descripcion_edificio === edificio || 
-      e.codigo_edificio.toString() === edificio
+      (e.codigo_edificio && e.codigo_edificio.toString() === edificio)
     )
     
     console.log('getAvailableFloors - Building encontrado:', building)
     
-    if (building) {
+    if (building && building.codigo_edificio) {
       const codigoEdificio = building.codigo_edificio.toString()
       
       // Verificar si ya tenemos los pisos en caché
       if (buildingFloors[codigoEdificio]) {
         console.log('getAvailableFloors - Pisos desde caché:', buildingFloors[codigoEdificio])
-        return buildingFloors[codigoEdificio].map(piso => piso.descripcion_piso)
+        return buildingFloors[codigoEdificio].map((piso: any) => piso.descripcion_piso)
       }
       
       // Cargar pisos desde el backend
       console.log('getAvailableFloors - Cargando pisos desde backend para edificio:', codigoEdificio)
-      const pisos = await loadBuildingFloors(codigoEdificio)
+      const pisos = await loadBuildingFloors(building.codigo_edificio)
       
       // Guardar en caché
       setBuildingFloors(prev => ({
@@ -287,7 +300,7 @@ export function useAgendaData() {
       }))
       
       console.log('getAvailableFloors - Pisos cargados del backend:', pisos)
-      return pisos.map(piso => piso.descripcion_piso)
+      return pisos.map((piso: any) => piso.descripcion_piso)
     }
     
     console.log('getAvailableFloors - No se encontró building, retornando array vacío')
@@ -295,9 +308,11 @@ export function useAgendaData() {
   }, [buildings, buildingFloors, loadBuildingFloors])
 
   const getDefaultBuildingFloors = useCallback((): string[] => {
-    // Retornar array vacío para forzar selección manual de edificio
-    return []
-  }, [])
+    // Retornar solo los pisos del edificio con código 2
+    const pisos = buildingFloors['2'] || []
+    console.log('🏢 Pisos del edificio 2 (por defecto):', pisos)
+    return pisos.map(piso => piso.descripcion_piso)
+  }, [buildingFloors])
 
     // Versión síncrona para usar en el dashboard (usa caché)
   const getAvailableFloorsSync = useCallback((edificio: string): string[] => {
@@ -305,13 +320,13 @@ export function useAgendaData() {
 
     const building = buildings.find((e: Edificio) => 
       e.descripcion_edificio === edificio || 
-      e.codigo_edificio.toString() === edificio
+      (e.codigo_edificio && e.codigo_edificio.toString() === edificio)
     )
     
-    if (building) {
+    if (building && building.codigo_edificio) {
       const codigoEdificio = building.codigo_edificio.toString()
       const pisos = buildingFloors[codigoEdificio] || []
-      return pisos.map(piso => piso.descripcion_piso)
+      return pisos.map((piso: any) => piso.descripcion_piso)
     }
     
     return []
@@ -323,23 +338,23 @@ export function useAgendaData() {
     
     const building = buildings.find((e: Edificio) => 
       e.descripcion_edificio === edificio || 
-      e.codigo_edificio.toString() === edificio
+      (e.codigo_edificio && e.codigo_edificio.toString() === edificio)
     )
     
-    if (building) {
+    if (building && building.codigo_edificio) {
       const codigoEdificio = building.codigo_edificio.toString()
       
       // Si no está en caché, cargarlo
       if (!buildingFloors[codigoEdificio]) {
-        const pisos = await loadBuildingFloors(codigoEdificio)
+        const pisos = await loadBuildingFloors(building.codigo_edificio)
         setBuildingFloors(prev => ({
           ...prev,
           [codigoEdificio]: pisos
         }))
-        return pisos.map(piso => piso.descripcion_piso)
+        return pisos.map((piso: any) => piso.descripcion_piso)
       }
       
-      return buildingFloors[codigoEdificio].map(piso => piso.descripcion_piso)
+      return buildingFloors[codigoEdificio].map((piso: any) => piso.descripcion_piso)
     }
     
     return []
@@ -351,13 +366,13 @@ export function useAgendaData() {
     
     const building = buildings.find((e: Edificio) => 
       e.descripcion_edificio === edificio || 
-      e.codigo_edificio.toString() === edificio
+      (e.codigo_edificio && e.codigo_edificio.toString() === edificio)
     )
     
-    if (building) {
+    if (building && building.codigo_edificio) {
       const codigoEdificio = building.codigo_edificio.toString()
       const pisos = buildingFloors[codigoEdificio] || []
-      const piso = pisos.find(p => p.descripcion_piso === descripcionPiso)
+      const piso = pisos.find((p: any) => p.descripcion_piso === descripcionPiso)
       return piso ? piso.codigo_piso : null
     }
     
@@ -499,10 +514,12 @@ export function useAgendaData() {
         // Crear nueva agenda
         const createPayload = { ...payload }
         delete createPayload.codigo_agenda
-        saveResult = await createAgenda(createPayload)
+        saveResult = await createAgenda(createPayload as Omit<Agenda, "id">)
       } else {
         // Actualizar agenda existente
-        payload.codigo_agenda = record.agendaId
+        if (payload.codigo_agenda === undefined) {
+          payload.codigo_agenda = record.agendaId
+        }
         saveResult = await updateAgenda(record.agendaId, payload)
       }
       
