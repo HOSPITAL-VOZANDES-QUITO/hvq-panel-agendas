@@ -110,6 +110,7 @@ class ApiService {
           }
         }
         
+        
         console.error(`💥 Unexpected error:`, error.message)
         return {
           data: null as T,
