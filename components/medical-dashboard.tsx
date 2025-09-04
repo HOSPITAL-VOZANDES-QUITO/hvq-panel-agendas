@@ -297,9 +297,6 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
                         >
                           <Check className={`mr-2 h-4 w-4 ${record.codigoConsultorio === consultorio.codigo_consultorio ? "opacity-100" : "opacity-0"}`} />
                           {consultorio.descripcion_consultorio || consultorio.codigo_consultorio} 
-                          <span className="text-gray-500 ml-2">
-                            (Edificio: {consultorio.codigo_edificio}, Piso: {consultorio.codigo_piso})
-                          </span>
                         </CommandItem>
                       ))
                     })()}

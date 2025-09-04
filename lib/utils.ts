@@ -19,8 +19,10 @@ export const encodeTipo = (tipoTexto: "Consulta" | "Procedimiento"): string => {
 }
 
 // Función para obtener el nombre del día desde el código
+// Función para obtener el nombre del día desde el código
 export const getDayName = (codigoDia: number): string => {
-  return DAYS_NAMES[codigoDia as keyof typeof DAYS_NAMES] || 'Sin día'
+  const dayName = DAYS_NAMES[codigoDia as keyof typeof DAYS_NAMES] || 'Sin día'
+  return dayName.toUpperCase()
 }
 
 // Función para mapear nombre del día a código

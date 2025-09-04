@@ -178,7 +178,7 @@
 
 .hvq-text-primary { color: var(--hvq-primary); }
 .hvq-text-secondary { color: var(--hvq-secondary); }
-.hvq-text-dark { color: var(--hvq-dark-text); }
+.hvq-text-dark { color: var(--hvq-dark-text); font-size: smaller; }
 .hvq-text-light { color: var(--hvq-light-text); }
 .hvq-text-muted { color: var(--hvq-muted-text); }
 
