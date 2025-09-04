@@ -435,12 +435,18 @@ export function useAgendaData() {
     setRecords((prev) =>
       prev.map((record) => {
         if (record.id === id) {
-          const updated = { ...record, [field]: value }
+          // Convertir a mayúsculas para campos de texto específicos
+          let processedValue = value
+          if (typeof value === 'string' && ['especialidad', 'nombre', 'dia', 'piso', 'consultorioDescripcion', 'tipo'].includes(field)) {
+            processedValue = value.toUpperCase()
+          }
+          
+          const updated = { ...record, [field]: processedValue }
           if (field === "edificio") {
             updated.piso = ""
             // Cargar pisos para el edificio seleccionado
-            if (value && typeof value === 'string') {
-              loadFloorsForBuilding(value)
+            if (processedValue && typeof processedValue === 'string') {
+              loadFloorsForBuilding(processedValue)
             }
           }
           return updated

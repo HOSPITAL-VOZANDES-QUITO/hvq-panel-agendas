@@ -35,7 +35,7 @@ export const FilterSection = memo(function FilterSection({
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
         {/* Búsqueda */}
         <div className="space-y-2">
           <label className="text-sm font-medium" style={{ color: COLORS.TEXT_DARK }}>Búsqueda</label>
@@ -62,7 +62,7 @@ export const FilterSection = memo(function FilterSection({
             onValueChange={(value) => onFilterChange("especialidad", value)}
           >
             <SelectTrigger 
-              className="min-w-0"
+              className="min-w-0 max-w-full"
               style={{
                 borderColor: COLORS.BORDER,
                 '--tw-ring-color': COLORS.PRIMARY,
@@ -70,10 +70,10 @@ export const FilterSection = memo(function FilterSection({
             >
               <SelectValue 
                 placeholder="Seleccionar especialidad"
-                className="truncate"
+                className="truncate text-left"
               />
             </SelectTrigger>
-            <SelectContent className="max-w-[300px]">
+            <SelectContent className="max-w-[400px]">
               <SelectItem value="todas">Todas las especialidades</SelectItem>
               {Array.isArray(specialties) && 
                 [...specialties]
@@ -101,7 +101,7 @@ export const FilterSection = memo(function FilterSection({
             onValueChange={(value) => onFilterChange("edificio", value)}
           >
             <SelectTrigger 
-              className="min-w-0"
+              className="min-w-0 max-w-full"
               style={{
                 borderColor: COLORS.BORDER,
                 '--tw-ring-color': COLORS.PRIMARY,
@@ -109,7 +109,7 @@ export const FilterSection = memo(function FilterSection({
             >
               <SelectValue 
                 placeholder="Seleccionar edificio"
-                className="truncate"
+                className="truncate text-left"
               />
             </SelectTrigger>
             <SelectContent className="max-w-[300px]">
@@ -136,7 +136,7 @@ export const FilterSection = memo(function FilterSection({
             onValueChange={(value) => onFilterChange("tipo", value)}
           >
             <SelectTrigger 
-              className="min-w-0"
+              className="min-w-0 max-w-full"
               style={{
                 borderColor: COLORS.BORDER,
                 '--tw-ring-color': COLORS.PRIMARY,
@@ -144,7 +144,7 @@ export const FilterSection = memo(function FilterSection({
             >
               <SelectValue 
                 placeholder="Seleccionar tipo"
-                className="truncate"
+                className="truncate text-left"
               />
             </SelectTrigger>
             <SelectContent className="max-w-[300px]">

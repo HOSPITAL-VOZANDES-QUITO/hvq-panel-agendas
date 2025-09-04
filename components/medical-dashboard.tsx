@@ -107,50 +107,53 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
 
     switch (field) {
       case 'especialidad':
-  return (
+        return (
           <Popover 
             open={openPopovers[`especialidad-${record.id}`]} 
             onOpenChange={(open) => open ? togglePopover(`especialidad-${record.id}`) : closePopover(`especialidad-${record.id}`)}
           >
-                  <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-between hvq-border min-w-0">
-                                <span className="truncate flex-1 text-left">
-                                  {record.especialidad || "Seleccionar especialidad"}
-                                </span>
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-full p-0 max-w-[400px]">
-                              <Command>
-                                <CommandInput placeholder="Buscar especialidad..." />
-                                <CommandList>
-                                  <CommandEmpty>No se encontró especialidad.</CommandEmpty>
-                                  <CommandGroup>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="w-full min-w-[180px] max-w-[200px] justify-between hvq-border hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3"
+              >
+                <span className="truncate flex-1 text-left text-sm">
+                  {record.especialidad || "Seleccionar especialidad"}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[300px] p-0">
+              <Command>
+                <CommandInput placeholder="Buscar especialidad..." />
+                <CommandList>
+                  <CommandEmpty>No se encontró especialidad.</CommandEmpty>
+                  <CommandGroup>
                     {specialties
-                                        .sort((a, b) => a.descripcion.localeCompare(b.descripcion))
+                      .sort((a, b) => a.descripcion.localeCompare(b.descripcion))
                       .map((esp, index) => (
-                                        <CommandItem
-                                          key={`specialty-edit-${esp.especialidadId}-${index}`}
-                                          value={esp.descripcion}
-                                          onSelect={(value) => {
-                                            handleFieldChange(record.id, "especialidad", value)
-                                            handleFieldChange(record.id, "nombre", "")
-                                            handleFieldChange(record.id, "doctorId", 0)
-                                            handleFieldChange(record.id, "codigoItemAgendamiento", 0)
-                                          closePopover(`especialidad-${record.id}`)
-                                        }}
-                                        className="truncate"
-                                        title={esp.descripcion}
-                                      >
+                        <CommandItem
+                          key={`specialty-edit-${esp.especialidadId}-${index}`}
+                          value={esp.descripcion}
+                          onSelect={(value) => {
+                            handleFieldChange(record.id, "especialidad", value)
+                            handleFieldChange(record.id, "nombre", "")
+                            handleFieldChange(record.id, "doctorId", 0)
+                            handleFieldChange(record.id, "codigoItemAgendamiento", 0)
+                            closePopover(`especialidad-${record.id}`)
+                          }}
+                          className="truncate"
+                          title={esp.descripcion}
+                        >
                           <Check className={`mr-2 h-4 w-4 ${record.especialidad === esp.descripcion ? "opacity-100" : "opacity-0"}`} />
-                                        {esp.descripcion}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                </CommandList>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
+                          {esp.descripcion}
+                        </CommandItem>
+                      ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         )
 
       case 'nombre':
@@ -159,100 +162,102 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
             open={openPopovers[`medico-${record.id}`]} 
             onOpenChange={(open) => open ? togglePopover(`medico-${record.id}`) : closePopover(`medico-${record.id}`)}
           >
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                className="w-full justify-between hvq-border"
-                                disabled={!record.especialidad}
-                              >
-                                {record.nombre || (record.especialidad ? "Seleccionar médico" : "Primero seleccione especialidad")}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-full p-0">
-                              <Command>
-                                <CommandInput placeholder="Buscar médico..." />
-                                <CommandList>
-                                  <CommandEmpty>No se encontró médico.</CommandEmpty>
-                                  <CommandGroup>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full min-w-[200px] max-w-[250px] justify-between hvq-border hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3"
+                disabled={!record.especialidad}
+              >
+                <span className="truncate flex-1 text-left text-sm">
+                  {record.nombre || (record.especialidad ? "Seleccionar médico" : "Primero seleccione especialidad")}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[350px] p-0">
+              <Command>
+                <CommandInput placeholder="Buscar médico..." />
+                <CommandList>
+                  <CommandEmpty>No se encontró médico.</CommandEmpty>
+                  <CommandGroup>
                     {getDoctorsBySpecialty(record.especialidad).map((doctor, index) => (
-                                      <CommandItem
-                                        key={`doctor-${doctor.id}-${index}`}
-                                        value={doctor.nombres}
-                                        onSelect={(value) => {
+                      <CommandItem
+                        key={`doctor-${doctor.id}-${index}`}
+                        value={doctor.nombres}
+                        onSelect={(value) => {
                           const selectedDoctor = doctors.find((d) => d.nombres === value)
-                                          if (selectedDoctor) {
-                                            handleFieldChange(record.id, "nombre", selectedDoctor.nombres)
-                                            handleFieldChange(record.id, "doctorId", selectedDoctor.id)
-                                            let defaultItem = 0
+                          if (selectedDoctor) {
+                            handleFieldChange(record.id, "nombre", selectedDoctor.nombres)
+                            handleFieldChange(record.id, "doctorId", selectedDoctor.id)
+                            let defaultItem = 0
                             if (selectedDoctor.especialidades && selectedDoctor.especialidades.length > 0) {
-                                              if (record.especialidad) {
+                              if (record.especialidad) {
                                 const match = selectedDoctor.especialidades.find((esp) => esp.descripcion === record.especialidad)
-                                                defaultItem = match?.especialidadId || selectedDoctor.especialidades[0]?.especialidadId || 0
-                                              } else {
-                                                defaultItem = selectedDoctor.especialidades[0]?.especialidadId || 0
-                                              }
-                                            }
-                                            handleFieldChange(record.id, "codigoItemAgendamiento", defaultItem)
-                                            closePopover(`medico-${record.id}`)
-                                          }
-                                        }}
-                                      >
+                                defaultItem = match?.especialidadId || selectedDoctor.especialidades[0]?.especialidadId || 0
+                              } else {
+                                defaultItem = selectedDoctor.especialidades[0]?.especialidadId || 0
+                              }
+                            }
+                            handleFieldChange(record.id, "codigoItemAgendamiento", defaultItem)
+                            closePopover(`medico-${record.id}`)
+                          }
+                        }}
+                      >
                         <Check className={`mr-2 h-4 w-4 ${record.nombre === doctor.nombres ? "opacity-100" : "opacity-0"}`} />
-                                        {doctor.nombres}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                </CommandList>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
+                        {doctor.nombres}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         )
 
       case 'dia':
         return (
           <Select value={record.dia} onValueChange={(value) => handleFieldChange(record.id, "dia", value)}>
-            <SelectTrigger className="hvq-border">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Lunes">Lunes</SelectItem>
-                              <SelectItem value="Martes">Martes</SelectItem>
-                              <SelectItem value="Miércoles">Miércoles</SelectItem>
-                              <SelectItem value="Jueves">Jueves</SelectItem>
-                              <SelectItem value="Viernes">Viernes</SelectItem>
-                              <SelectItem value="Sábado">Sábado</SelectItem>
-                              <SelectItem value="Domingo">Domingo</SelectItem>
-                            </SelectContent>
-                          </Select>
+            <SelectTrigger className="hvq-border min-w-[100px] max-w-[120px] hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="LUNES">LUNES</SelectItem>
+              <SelectItem value="MARTES">MARTES</SelectItem>
+              <SelectItem value="MIÉRCOLES">MIÉRCOLES</SelectItem>
+              <SelectItem value="JUEVES">JUEVES</SelectItem>
+              <SelectItem value="VIERNES">VIERNES</SelectItem>
+              <SelectItem value="SÁBADO">SÁBADO</SelectItem>
+              <SelectItem value="DOMINGO">DOMINGO</SelectItem>
+            </SelectContent>
+          </Select>
         )
 
       case 'piso':
         return (
-                          <Select
-                            value={record.piso}
-                            onValueChange={(value) => handleFieldChange(record.id, "piso", value)}
-                            disabled={record.agendaId !== 0 && (!record.edificio || getAvailableFloorsSync(record.edificio).length === 0)}
-                          >
-            <SelectTrigger className="hvq-border">
-                              <SelectValue placeholder={
-                                record.agendaId === 0 
-                                  ? "Seleccionar piso" 
-                                  : !record.edificio 
-                                    ? "Seleccione edificio primero" 
-                                    : getAvailableFloorsSync(record.edificio).length === 0
-                                      ? "No hay pisos disponibles"
-                                      : "Seleccionar piso"
-                              } />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(record.agendaId === 0 ? getDefaultBuildingFloors() : getAvailableFloorsSync(record.edificio)).map((piso, index) => (
-                                <SelectItem key={`piso-${record.id}-${piso}-${index}`} value={piso}>
-                                  {piso}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+          <Select
+            value={record.piso}
+            onValueChange={(value) => handleFieldChange(record.id, "piso", value)}
+            disabled={record.agendaId !== 0 && (!record.edificio || getAvailableFloorsSync(record.edificio).length === 0)}
+          >
+            <SelectTrigger className="hvq-border min-w-[100px] max-w-[120px] hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3">
+              <SelectValue placeholder={
+                record.agendaId === 0 
+                  ? "Seleccionar piso" 
+                  : !record.edificio 
+                    ? "Seleccione edificio primero" 
+                    : getAvailableFloorsSync(record.edificio).length === 0
+                      ? "No hay pisos disponibles"
+                      : "Seleccionar piso"
+              } />
+            </SelectTrigger>
+            <SelectContent>
+              {(record.agendaId === 0 ? getDefaultBuildingFloors() : getAvailableFloorsSync(record.edificio)).map((piso, index) => (
+                <SelectItem key={`piso-${record.id}-${piso}-${index}`} value={piso}>
+                  {piso}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )
 
       case 'consultorioDescripcion':
@@ -262,17 +267,22 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
             onOpenChange={(open) => open ? togglePopover(`consultorio-${record.id}`) : closePopover(`consultorio-${record.id}`)}
           >
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-between hvq-border">
-                                {record.consultorioDescripcion || record.codigoConsultorio || "Seleccionar consultorio"}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-full p-0">
-                              <Command>
-                                <CommandInput placeholder="Buscar consultorio..." />
-                                <CommandList>
-                                  <CommandEmpty>No se encontró consultorio.</CommandEmpty>
-                                  <CommandGroup>
+              <Button 
+                variant="outline" 
+                className="w-full min-w-[100px] max-w-[120px] justify-between hvq-border hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3"
+              >
+                <span className="truncate flex-1 text-left text-sm">
+                  {record.consultorioDescripcion || record.codigoConsultorio || "Seleccionar consultorio"}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[250px] p-0">
+              <Command>
+                <CommandInput placeholder="Buscar consultorio..." />
+                <CommandList>
+                  <CommandEmpty>No se encontró consultorio.</CommandEmpty>
+                  <CommandGroup>
                     {(() => {
                       // Filtrar consultorios por piso seleccionado
                       const pisoNumero = record.piso ? parseInt(record.piso) : null
@@ -300,41 +310,41 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
                         </CommandItem>
                       ))
                     })()}
-                                  </CommandGroup>
-                                </CommandList>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         )
 
       case 'horaInicio':
       case 'horaFin':
         return (
-                          <Input
-                            type="time"
+          <Input
+            type="time"
             value={record[field]}
             onChange={(e) => handleFieldChange(record.id, field, e.target.value)}
-                            onKeyDown={(e) => handleKeyDown(e, record.id)}
-            className="hvq-border"
-                            title="Ctrl+Enter para guardar"
-                            required
-                          />
+            onKeyDown={(e) => handleKeyDown(e, record.id)}
+            className="hvq-border min-w-[100px] max-w-[120px] hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3 text-sm"
+            title="Ctrl+Enter para guardar"
+            required
+          />
         )
 
       case 'tipo':
         return (
-                          <Select
-                            value={record.tipo}
-                            onValueChange={(value) => handleFieldChange(record.id, "tipo", value as "Consulta" | "Procedimiento")}
-                          >
-            <SelectTrigger className="hvq-border">
-                              <SelectValue placeholder="Seleccionar tipo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Consulta">Consulta</SelectItem>
-                              <SelectItem value="Procedimiento">Procedimiento</SelectItem>
-                            </SelectContent>
-                          </Select>
+          <Select
+            value={record.tipo}
+            onValueChange={(value) => handleFieldChange(record.id, "tipo", value as "Consulta" | "Procedimiento")}
+          >
+            <SelectTrigger className="hvq-border min-w-[120px] max-w-[140px] hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3">
+              <SelectValue placeholder="Seleccionar tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Consulta">Consulta</SelectItem>
+              <SelectItem value="Procedimiento">Procedimiento</SelectItem>
+            </SelectContent>
+          </Select>
         )
 
       default:
@@ -362,14 +372,6 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
           </Alert>
         )}
 
-        {/* Mostrar skeleton mientras carga */}
-        {loading === 'loading' && (
-          <div className="space-y-4 mb-4">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-          </div>
-        )}
 
         <Card className="hvq-bg-white hvq-border shadow-lg">
           <CardHeader>
