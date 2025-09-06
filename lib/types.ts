@@ -66,6 +66,7 @@ export interface CombinedRecord {
 export interface Filters {
   especialidad: string
   edificio: string
+  piso: string
   tipo: string
   search: string
 }
@@ -109,6 +110,7 @@ export interface FilterSectionProps {
   onClearFilters: () => void
   specialties: Especialidad[]
   buildings: Edificio[]
+  availableFloors: string[]
   filteredRecords: CombinedRecord[]
   records: CombinedRecord[]
   paginatedRecords: CombinedRecord[]

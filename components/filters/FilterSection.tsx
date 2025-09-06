@@ -114,16 +114,18 @@ export const FilterSection = memo(function FilterSection({
             </SelectTrigger>
             <SelectContent className="max-w-[300px]">
               <SelectItem value="todos">Todos los edificios</SelectItem>
-              {Array.isArray(buildings) && buildings.map((edificio, index) => (
-                <SelectItem 
-                  key={`edificio-filter-${edificio.codigo_edificio}-${index}`} 
-                  value={edificio.descripcion_edificio}
-                  className="truncate"
-                  title={edificio.descripcion_edificio}
-                >
-                  {edificio.descripcion_edificio}
-                </SelectItem>
-              ))}
+              {Array.isArray(buildings) && buildings
+                .filter(edificio => edificio.descripcion_edificio)
+                .map((edificio, index) => (
+                  <SelectItem 
+                    key={`edificio-filter-${edificio.codigo_edificio}-${index}`} 
+                    value={edificio.descripcion_edificio!}
+                    className="truncate"
+                    title={edificio.descripcion_edificio!}
+                  >
+                    {edificio.descripcion_edificio!}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>

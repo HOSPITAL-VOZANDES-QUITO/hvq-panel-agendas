@@ -54,6 +54,7 @@ export function useAgendaData() {
   const [filters, setFilters] = useState<Filters>({
     especialidad: "",
     edificio: "",
+    piso: "",
     tipo: "",
     search: "",
   })
@@ -220,6 +221,11 @@ export function useAgendaData() {
       filtered = filtered.filter(record => record.edificio === filters.edificio)
     }
 
+    // Filtro por piso
+    if (filters.piso && filters.piso !== "todos") {
+      filtered = filtered.filter(record => record.piso === filters.piso)
+    }
+
     // Filtro por tipo
     if (filters.tipo && filters.tipo !== "todos") {
       filtered = filtered.filter(record => record.tipo === filters.tipo)
@@ -228,7 +234,7 @@ export function useAgendaData() {
     // Filtro por búsqueda
     if (filters.search) {
       filtered = filterByText(filtered, filters.search, [
-        'nombre', 'especialidad', 'edificio', 'dia', 'consultorioDescripcion'
+        'nombre', 'especialidad', 'edificio', 'piso', 'dia', 'consultorioDescripcion'
       ])
     }
 
@@ -421,6 +427,7 @@ export function useAgendaData() {
     setFilters({
       especialidad: "",
       edificio: "",
+      piso: "",
       tipo: "",
       search: "",
     })
@@ -443,11 +450,18 @@ export function useAgendaData() {
           
           const updated = { ...record, [field]: processedValue }
           if (field === "edificio") {
+            // Limpiar piso, consultorio cuando se cambia edificio
             updated.piso = ""
+            updated.codigoConsultorio = 0
+            updated.consultorioDescripcion = ""
             // Cargar pisos para el edificio seleccionado
             if (processedValue && typeof processedValue === 'string') {
               loadFloorsForBuilding(processedValue)
             }
+          } else if (field === "piso") {
+            // Limpiar consultorio cuando se cambia piso
+            updated.codigoConsultorio = 0
+            updated.consultorioDescripcion = ""
           }
           return updated
         }
@@ -490,8 +504,9 @@ export function useAgendaData() {
         return
       }
 
-      const codigoConsultorio = obtenerCodigoConsultorio(record.edificio, record.piso)
-      if (!record.doctorId || !codigoConsultorio || !record.horaInicio || !record.horaFin || !record.dia) {
+      // Usar el consultorio elegido si existe; de lo contrario, inferir por edificio/piso
+      const codigoConsultorioElegido = record.codigoConsultorio || obtenerCodigoConsultorio(record.edificio, record.piso)
+      if (!record.doctorId || !codigoConsultorioElegido || !record.horaInicio || !record.horaFin || !record.dia) {
         alert('Por favor complete todos los campos requeridos, incluyendo las horas de inicio y fin.')
         return
       }
@@ -504,11 +519,17 @@ export function useAgendaData() {
       const horaInicioFormateada = formatTimeForBackend(record.horaInicio)
       const horaFinFormateada = formatTimeForBackend(record.horaFin)
       
+      const codigoDia = mapDayToCode(record.dia)
+      if (!codigoDia) {
+        alert('Por favor seleccione un día válido.')
+        return
+      }
+
       const payload: AgendaPayload = {
         codigo_prestador: record.doctorId,
-        codigo_consultorio: codigoConsultorio,
+        codigo_consultorio: codigoConsultorioElegido,
         codigo_item_agendamiento: codigoItemAgendamiento,
-        codigo_dia: mapDayToCode(record.dia),
+        codigo_dia: codigoDia,
         hora_inicio: horaInicioFormateada,
         hora_fin: horaFinFormateada,
         tipo: record.tipo === "Consulta" ? "C" : "P"
@@ -554,22 +575,32 @@ export function useAgendaData() {
 
   const handleDuplicate = (record: CombinedRecord) => {
     const newId = generateUniqueId()
-    
+
+    // Duplicar heredando TODOS los valores y quedando en modo lectura
     const duplicatedRecord: CombinedRecord = {
       ...record,
       id: newId,
       agendaId: 0,
-      edificio: "",
-      piso: "",
-      isEditing: true,
+      isEditing: false,
     }
-    
+
     setRecords((prev) => [duplicatedRecord, ...prev])
-    setEditingId(newId)
   }
 
   const handleAddRecord = () => {
+    // Verificar si hay filtros activos
+    const hasActiveFilters = filters.search || filters.especialidad || filters.edificio || filters.piso || filters.tipo
+    
+    if (hasActiveFilters) {
+      alert("Primero debe limpiar filtros para poder agregar")
+      return
+    }
+    
     const newId = generateUniqueId()
+    
+    // Usar valores por defecto más inteligentes
+    const defaultBuilding = buildings.find(b => b.codigo_edificio === 2) // Edificio 2 por defecto
+    const defaultFloors = getDefaultBuildingFloors()
     
     const newRecord: CombinedRecord = {
       id: newId,
@@ -579,9 +610,11 @@ export function useAgendaData() {
       especialidad: "",
       tipo: "Consulta",
       codigoItemAgendamiento: 0,
-      edificio: "",
-      piso: "",
-      dia: "Lunes",
+      edificio: defaultBuilding ? (defaultBuilding.descripcion_edificio || "") : "",
+      piso: "", // Dejarlo vacío para que el usuario seleccione
+      codigoConsultorio: 0,
+      consultorioDescripcion: "",
+      dia: "", // Usuario debe seleccionar el día
       horaInicio: "",
       horaFin: "",
       estado: "Activa",
@@ -594,10 +627,21 @@ export function useAgendaData() {
   }
 
   const handleAddRecordFromDoctor = (doctor: Doctor) => {
+    // Verificar si hay filtros activos
+    const hasActiveFilters = filters.search || filters.especialidad || filters.edificio || filters.piso || filters.tipo
+    
+    if (hasActiveFilters) {
+      alert("Primero debe limpiar filtros para poder agregar")
+      return
+    }
+    
     const newId = generateUniqueId()
     const firstSpecialty = doctor.especialidades && doctor.especialidades.length > 0 
       ? doctor.especialidades[0] 
       : null
+    
+    // Usar valores por defecto más inteligentes
+    const defaultBuilding = buildings.find(b => b.codigo_edificio === 2) // Edificio 2 por defecto
     
     const newRecord: CombinedRecord = {
       id: newId,
@@ -607,9 +651,11 @@ export function useAgendaData() {
       especialidad: firstSpecialty?.descripcion || "",
       tipo: "Consulta",
       codigoItemAgendamiento: firstSpecialty?.especialidadId || 0,
-      edificio: "",
-      piso: "",
-      dia: "Lunes",
+      edificio: defaultBuilding ? (defaultBuilding.descripcion_edificio || "") : "",
+      piso: "", // Dejarlo vacío para que el usuario seleccione
+      codigoConsultorio: 0,
+      consultorioDescripcion: "",
+      dia: "", // Usuario debe seleccionar el día
       horaInicio: "",
       horaFin: "",
       estado: "Activa",

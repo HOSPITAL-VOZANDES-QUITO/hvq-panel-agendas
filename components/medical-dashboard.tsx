@@ -74,9 +74,17 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
     getAvailableFloorsSync,
     getDefaultBuildingFloors,
     loadFloorsForBuilding,
+    getPisoCodeByDescription,
   } = useAgendaData()
 
-
+  // Función para obtener pisos únicos para filtros
+  const getAvailableFloorsForFilter = useCallback((): string[] => {
+    const uniqueFloors = [...new Set(records
+      .map(record => record.piso)
+      .filter(piso => piso && piso.trim() !== '' && piso !== 'Sin consultorio')
+    )]
+    return uniqueFloors.sort()
+  }, [records])
 
   // Convertir datos a formato StaffItem para exportar (optimizado)
   const convertToStaffData = useMemo(() => {
@@ -101,7 +109,10 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
 
   // Renderizar celda de tabla (optimizada)
   const renderTableCell = useCallback((record: any, field: string, isEditing: boolean) => {
-    if (!isEditing) {
+    // Campos editables permitidos
+    const editableFields = new Set(['especialidad', 'nombre', 'dia', 'piso', 'consultorioDescripcion', 'horaInicio', 'horaFin'])
+
+    if (!isEditing || !editableFields.has(field)) {
       return <span className="hvq-text-dark">{record[field]}</span>
     }
 
@@ -218,7 +229,7 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
         return (
           <Select value={record.dia} onValueChange={(value) => handleFieldChange(record.id, "dia", value)}>
             <SelectTrigger className="hvq-border min-w-[100px] max-w-[120px] hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3">
-              <SelectValue />
+              <SelectValue placeholder="Seleccionar día" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="LUNES">LUNES</SelectItem>
@@ -232,26 +243,49 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
           </Select>
         )
 
+      case 'edificio':
+        return (
+          <Select 
+            value={record.edificio} 
+            onValueChange={(value) => handleFieldChange(record.id, "edificio", value)}
+          >
+            <SelectTrigger className="hvq-border min-w-[120px] max-w-[140px] hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3">
+              <SelectValue placeholder="Seleccionar edificio" />
+            </SelectTrigger>
+            <SelectContent>
+              {buildings
+                .filter(edificio => edificio.descripcion_edificio) // Filtrar edificios sin descripción
+                .map((edificio, index) => (
+                <SelectItem 
+                  key={`edificio-edit-${edificio.codigo_edificio}-${index}`} 
+                  value={edificio.descripcion_edificio!} // Non-null assertion ya que filtramos arriba
+                >
+                  {edificio.descripcion_edificio}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )
+
       case 'piso':
         return (
           <Select
             value={record.piso}
             onValueChange={(value) => handleFieldChange(record.id, "piso", value)}
-            disabled={record.agendaId !== 0 && (!record.edificio || getAvailableFloorsSync(record.edificio).length === 0)}
           >
             <SelectTrigger className="hvq-border min-w-[100px] max-w-[120px] hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3">
-              <SelectValue placeholder={
-                record.agendaId === 0 
-                  ? "Seleccionar piso" 
-                  : !record.edificio 
-                    ? "Seleccione edificio primero" 
-                    : getAvailableFloorsSync(record.edificio).length === 0
-                      ? "No hay pisos disponibles"
-                      : "Seleccionar piso"
-              } />
+              <SelectValue placeholder="Seleccionar piso" />
             </SelectTrigger>
             <SelectContent>
-              {(record.agendaId === 0 ? getDefaultBuildingFloors() : getAvailableFloorsSync(record.edificio)).map((piso, index) => (
+              {/* Para nuevos registros, usar pisos del edificio por defecto o seleccionado */}
+              {(record.agendaId === 0 && !record.edificio 
+                ? getDefaultBuildingFloors() 
+                : record.edificio 
+                  ? getAvailableFloorsSync(record.edificio)
+                  : getDefaultBuildingFloors()
+              )
+                .filter(piso => piso && piso.trim() !== '') // Filtrar valores vacíos
+                .map((piso, index) => (
                 <SelectItem key={`piso-${record.id}-${piso}-${index}`} value={piso}>
                   {piso}
                 </SelectItem>
@@ -270,6 +304,8 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
               <Button 
                 variant="outline" 
                 className="w-full min-w-[100px] max-w-[120px] justify-between hvq-border hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3"
+                disabled={!record.piso}
+                title={record.piso ? "Seleccionar consultorio" : "Seleccione un piso primero"}
               >
                 <span className="truncate flex-1 text-left text-sm">
                   {record.consultorioDescripcion || record.codigoConsultorio || "Seleccionar consultorio"}
@@ -284,16 +320,43 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
                   <CommandEmpty>No se encontró consultorio.</CommandEmpty>
                   <CommandGroup>
                     {(() => {
-                      // Filtrar consultorios por piso seleccionado
-                      const pisoNumero = record.piso ? parseInt(record.piso) : null
+                      // Filtrar consultorios por edificio y piso seleccionados
                       const edificioCodigo = buildings.find(b => b.descripcion_edificio === record.edificio)?.codigo_edificio
                       
-                      const consultoriosFiltrados = consultorios.filter(consultorio => {
-                        if (pisoNumero && edificioCodigo) {
-                          return consultorio.codigo_piso === pisoNumero && consultorio.codigo_edificio === edificioCodigo
-                        }
-                        return true // Si no hay piso seleccionado, mostrar todos
-                      })
+                      // Si no hay edificio seleccionado, no mostrar consultorios
+                      if (!record.edificio || !edificioCodigo) {
+                        return (
+                          <CommandItem disabled>
+                            Seleccione un edificio primero
+                          </CommandItem>
+                        )
+                      }
+                      
+                      // Si no hay piso seleccionado, no mostrar consultorios
+                      if (!record.piso) {
+                        return (
+                          <CommandItem disabled>
+                            Seleccione un piso primero
+                          </CommandItem>
+                        )
+                      }
+                      
+                      // Obtener el código del piso usando la función helper
+                      const codigoPiso = getPisoCodeByDescription(record.edificio, record.piso)
+                      
+                      // Filtrar consultorios por edificio y piso específicos
+                      const consultoriosFiltrados = consultorios.filter(consultorio => 
+                        consultorio.codigo_edificio === edificioCodigo && 
+                        consultorio.codigo_piso === codigoPiso
+                      )
+                      
+                      if (consultoriosFiltrados.length === 0) {
+                        return (
+                          <CommandItem disabled>
+                            No hay consultorios disponibles para este piso
+                          </CommandItem>
+                        )
+                      }
                       
                       return consultoriosFiltrados.map((consultorio, index) => (
                         <CommandItem
@@ -350,7 +413,7 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
       default:
         return <span className="hvq-text-dark">{record[field]}</span>
     }
-  }, [specialties, getDoctorsBySpecialty, doctors, consultorios, buildings, getAvailableFloorsSync, getDefaultBuildingFloors, handleFieldChange, closePopover, handleKeyDown])
+  }, [specialties, getDoctorsBySpecialty, doctors, consultorios, buildings, getAvailableFloorsSync, getDefaultBuildingFloors, handleFieldChange, closePopover, handleKeyDown, getPisoCodeByDescription])
 
   return (
     <div className="min-h-screen hvq-bg-light">
@@ -395,6 +458,7 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
               onClearFilters={clearFilters}
               specialties={specialties}
               buildings={buildings}
+              availableFloors={getAvailableFloorsForFilter()}
               filteredRecords={filteredRecords}
               records={records}
               paginatedRecords={paginatedRecords}
@@ -488,7 +552,7 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
                   <strong>Estado de datos:</strong><br/>
                   Médicos: {doctors.length} | Registros: {records.length}
                 </div>
-                {filters.search || filters.especialidad || filters.edificio || filters.tipo
+                {filters.search || filters.especialidad || filters.edificio || filters.piso || filters.tipo
                   ? "No se encontraron registros que coincidan con los filtros aplicados."
                   : loading === 'loading'
                     ? "Cargando datos del backend..."

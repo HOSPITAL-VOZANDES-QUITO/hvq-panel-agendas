@@ -27,16 +27,23 @@ export const getDayName = (codigoDia: number): string => {
 
 // Función para mapear nombre del día a código
 export const mapDayToCode = (dia: string): number => {
+  if (!dia) return 0
+  const normalize = (s: string) => s
+    .toUpperCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '') // quitar acentos
+
+  const key = normalize(dia)
   const dayMap: { [key: string]: number } = {
-    'Lunes': DAYS_OF_WEEK.LUNES,
-    'Martes': DAYS_OF_WEEK.MARTES,
-    'Miércoles': DAYS_OF_WEEK.MIERCOLES,
-    'Jueves': DAYS_OF_WEEK.JUEVES,
-    'Viernes': DAYS_OF_WEEK.VIERNES,
-    'Sábado': DAYS_OF_WEEK.SABADO,
-    'Domingo': DAYS_OF_WEEK.DOMINGO,
+    'LUNES': DAYS_OF_WEEK.LUNES,
+    'MARTES': DAYS_OF_WEEK.MARTES,
+    'MIERCOLES': DAYS_OF_WEEK.MIERCOLES,
+    'JUEVES': DAYS_OF_WEEK.JUEVES,
+    'VIERNES': DAYS_OF_WEEK.VIERNES,
+    'SABADO': DAYS_OF_WEEK.SABADO,
+    'DOMINGO': DAYS_OF_WEEK.DOMINGO,
   }
-  return dayMap[dia] || DAYS_OF_WEEK.LUNES
+  return dayMap[key] || 0
 }
 
 // Formatear horas desde diferentes formatos de BD SIN usar Date/TZ (tratamiento "naive")
