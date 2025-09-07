@@ -61,6 +61,15 @@ export function useAgendaData() {
   const [currentPage, setCurrentPage] = useState(1)
   const [openPopovers, setOpenPopovers] = useState<{[key: string]: boolean}>({})
   const [buildingFloors, setBuildingFloors] = useState<{[key: string]: Piso[]}>({})
+  const [alertState, setAlertState] = useState<{
+    isOpen: boolean
+    message: string
+    type: "success" | "error" | "warning" | "info"
+  }>({
+    isOpen: false,
+    message: "",
+    type: "info"
+  })
 
   // Cargar datos del backend
   useEffect(() => {
@@ -585,6 +594,12 @@ export function useAgendaData() {
     }
 
     setRecords((prev) => [duplicatedRecord, ...prev])
+    
+    setAlertState({
+      isOpen: true,
+      message: "Agenda duplicada correctamente. El nuevo registro aparece al inicio de la lista.",
+      type: "success"
+    })
   }
 
   const handleAddRecord = () => {
@@ -592,7 +607,11 @@ export function useAgendaData() {
     const hasActiveFilters = filters.search || filters.especialidad || filters.edificio || filters.piso || filters.tipo
     
     if (hasActiveFilters) {
-      alert("Primero debe limpiar filtros para poder agregar")
+      setAlertState({
+        isOpen: true,
+        message: "Primero debe limpiar filtros para poder agregar",
+        type: "warning"
+      })
       return
     }
     
@@ -631,7 +650,11 @@ export function useAgendaData() {
     const hasActiveFilters = filters.search || filters.especialidad || filters.edificio || filters.piso || filters.tipo
     
     if (hasActiveFilters) {
-      alert("Primero debe limpiar filtros para poder agregar")
+      setAlertState({
+        isOpen: true,
+        message: "Primero debe limpiar filtros para poder agregar",
+        type: "warning"
+      })
       return
     }
     
@@ -674,6 +697,10 @@ export function useAgendaData() {
 
   const closePopover = useCallback((key: string) => {
     setOpenPopovers(prev => ({ ...prev, [key]: false }))
+  }, [])
+
+  const closeAlert = useCallback(() => {
+    setAlertState(prev => ({ ...prev, isOpen: false }))
   }, [])
 
   // Función para guardar con Enter optimizada
@@ -729,5 +756,9 @@ export function useAgendaData() {
     getDefaultBuildingFloors,
     loadFloorsForBuilding,
     getPisoCodeByDescription,
+    
+    // Alert state
+    alertState,
+    closeAlert,
   }
 }

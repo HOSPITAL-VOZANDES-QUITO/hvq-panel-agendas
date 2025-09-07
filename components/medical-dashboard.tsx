@@ -26,6 +26,7 @@ import { FilterSection } from "@/components/filters/FilterSection"
 import { Pagination } from "@/components/pagination/Pagination"
 import { ActionButtons } from "@/components/actions/ActionButtons"
 import BtnExportarStaff from "@/components/BtnExportarStaff"
+import { CustomAlert } from "@/components/ui/custom-alert"
 import { COLORS } from "@/lib/constants"
 import type { MedicalDashboardProps } from "@/lib/types"
 
@@ -75,6 +76,10 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
     getDefaultBuildingFloors,
     loadFloorsForBuilding,
     getPisoCodeByDescription,
+    
+    // Alert state
+    alertState,
+    closeAlert,
   } = useAgendaData()
 
   // Función para obtener pisos únicos para filtros
@@ -110,7 +115,19 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
   // Renderizar celda de tabla (optimizada)
   const renderTableCell = useCallback((record: any, field: string, isEditing: boolean) => {
     // Campos editables permitidos
-    const editableFields = new Set(['especialidad', 'nombre', 'dia', 'piso', 'consultorioDescripcion', 'horaInicio', 'horaFin'])
+    const editableFields = new Set(['especialidad', 'nombre', 'dia', 'piso', 'consultorioDescripcion', 'horaInicio', 'horaFin', 'tipo'])
+
+    // Caso especial para tipo: mostrar Badge cuando no está editando
+    if (field === 'tipo' && !isEditing) {
+      return (
+        <Badge
+          variant="secondary"
+          className={record.tipo === "Consulta" ? "hvq-bg-secondary hvq-text-light" : "hvq-bg-primary hvq-text-light"}
+        >
+          {record.tipo}
+        </Badge>
+      )
+    }
 
     if (!isEditing || !editableFields.has(field)) {
       return <span className="hvq-text-dark">{record[field]}</span>
@@ -394,21 +411,23 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
           />
         )
 
-      case 'tipo':
-        return (
-          <Select
-            value={record.tipo}
-            onValueChange={(value) => handleFieldChange(record.id, "tipo", value as "Consulta" | "Procedimiento")}
-          >
-            <SelectTrigger className="hvq-border min-w-[120px] max-w-[140px] hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3">
-              <SelectValue placeholder="Seleccionar tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Consulta">Consulta</SelectItem>
-              <SelectItem value="Procedimiento">Procedimiento</SelectItem>
-            </SelectContent>
-          </Select>
-        )
+       case 'tipo':
+         return (
+           <Select
+             value={record.tipo}
+             onValueChange={(value) => handleFieldChange(record.id, "tipo", value as "Consulta" | "Procedimiento")}
+           >
+             <SelectTrigger className="hvq-border min-w-[120px] max-w-[140px] hvq-text-dark bg-white hover:bg-gray-50 h-9 px-3">
+               <SelectValue placeholder="Seleccionar tipo">
+                 {record.tipo || "Seleccionar tipo"}
+               </SelectValue>
+             </SelectTrigger>
+             <SelectContent>
+               <SelectItem value="Consulta">Consulta</SelectItem>
+               <SelectItem value="Procedimiento">Procedimiento</SelectItem>
+             </SelectContent>
+           </Select>
+         )
 
       default:
         return <span className="hvq-text-dark">{record[field]}</span>
@@ -445,7 +464,7 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
 
                                 <Button onClick={handleAddRecord} className="hvq-btn-primary">
                   <Plus className="w-4 h-4 mr-2" />
-                  Agenda Manual
+                  Agregar agenda
                 </Button>
               </div>
             </div>
@@ -512,18 +531,9 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
                       <TableCell className="border-r hvq-border p-2">
                         {renderTableCell(record, 'horaFin', record.isEditing)}
                       </TableCell>
-                      <TableCell className="border-r hvq-border p-2">
-                        {record.isEditing ? (
-                          renderTableCell(record, 'tipo', record.isEditing)
-                        ) : (
-                          <Badge
-                            variant="secondary"
-                            className={record.tipo === "Consulta" ? "hvq-bg-secondary hvq-text-light" : "hvq-bg-primary hvq-text-light"}
-                          >
-                            {record.tipo}
-                          </Badge>
-                        )}
-                      </TableCell>
+                       <TableCell className="border-r hvq-border p-2">
+                         {renderTableCell(record, 'tipo', record.isEditing)}
+                       </TableCell>
                       <TableCell className="p-2 min-w-[140px]">
                         <ActionButtons
                           record={record}
@@ -566,6 +576,15 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
           </CardContent>
         </Card>
       </main>
+
+      {/* Custom Alert */}
+      <CustomAlert
+        isOpen={alertState.isOpen}
+        onClose={closeAlert}
+        message={alertState.message}
+        type={alertState.type}
+        confirmText="Aceptar"
+      />
     </div>
   )
 }
