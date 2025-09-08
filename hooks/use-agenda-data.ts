@@ -451,9 +451,9 @@ export function useAgendaData() {
     setRecords((prev) =>
       prev.map((record) => {
         if (record.id === id) {
-          // Convertir a mayúsculas para campos de texto específicos
+          // Convertir a mayúsculas para campos de texto específicos (excepto tipo)
           let processedValue = value
-          if (typeof value === 'string' && ['especialidad', 'nombre', 'dia', 'piso', 'consultorioDescripcion', 'tipo'].includes(field)) {
+          if (typeof value === 'string' && ['especialidad', 'nombre', 'dia', 'piso', 'consultorioDescripcion'].includes(field)) {
             processedValue = value.toUpperCase()
           }
           
@@ -593,11 +593,22 @@ export function useAgendaData() {
       isEditing: false,
     }
 
-    setRecords((prev) => [duplicatedRecord, ...prev])
+    setRecords((prev) => {
+      const recordIndex = prev.findIndex(r => r.id === record.id)
+      if (recordIndex === -1) {
+        // Si no se encuentra el registro, insertar al inicio como fallback
+        return [duplicatedRecord, ...prev]
+      }
+      
+      // Insertar la agenda duplicada justo arriba de la original
+      const newRecords = [...prev]
+      newRecords.splice(recordIndex, 0, duplicatedRecord)
+      return newRecords
+    })
     
     setAlertState({
       isOpen: true,
-      message: "Agenda duplicada correctamente. El nuevo registro aparece al inicio de la lista.",
+      message: "Agenda duplicada correctamente. El nuevo registro aparece arriba de la agenda original.",
       type: "success"
     })
   }
