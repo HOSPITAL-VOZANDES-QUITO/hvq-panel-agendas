@@ -1,0 +1,29 @@
+# Configuración para compatibilidad con navegadores antiguos
+# Incluye soporte para navegadores que no soportan AbortSignal.timeout
+
+# Navegadores modernos (últimas 2 versiones)
+last 2 versions
+
+# Navegadores con más del 0.5% de uso global
+> 0.5%
+
+# Internet Explorer 11 (si es necesario)
+ie 11
+
+# Chrome 61+ (donde se introdujo AbortSignal básico)
+Chrome >= 61
+
+# Firefox 50+ (soporte básico para AbortController)
+Firefox >= 50
+
+# Safari 11+ (soporte básico para AbortController)
+Safari >= 11
+
+# Edge 16+ (soporte básico para AbortController)
+Edge >= 16
+
+# No incluir navegadores muertos
+not dead
+
+# No incluir navegadores con menos de 0.1% de uso
+not < 0.1%

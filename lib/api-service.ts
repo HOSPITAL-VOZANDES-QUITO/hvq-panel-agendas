@@ -2,6 +2,7 @@
 // Conectado al backend real en puerto 3001
 
 import type { Doctor, Agenda, Edificio, Piso } from "./types"
+import { fetchWithTimeout, getBrowserCompatibilityInfo, isLegacyBrowser } from "./browser-compat"
 
 // Configuración para conectar con el backend real
 const API_CONFIG = {
@@ -25,6 +26,14 @@ class ApiService {
 
   constructor() {
     this.baseURL = API_CONFIG.BASE_URL
+    
+    // Log de información de compatibilidad del navegador
+    if (typeof window !== 'undefined') {
+      getBrowserCompatibilityInfo()
+      if (isLegacyBrowser()) {
+        console.warn('⚠️ Navegador antiguo detectado - usando modo de compatibilidad')
+      }
+    }
   }
 
   // Método helper para hacer requests al backend real
@@ -42,18 +51,9 @@ class ApiService {
     console.log(`📋 Request config:`, config)
 
     try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => {
-        console.log(`⏰ Request timeout for: ${url}`)
-        controller.abort()
-      }, API_CONFIG.TIMEOUT)
-
-      const response = await fetch(url, {
-        ...config,
-        signal: controller.signal
-      })
-
-      clearTimeout(timeoutId)
+      // Usar fetchWithTimeout para mejor compatibilidad con navegadores antiguos
+      const response = await fetchWithTimeout(url, config, API_CONFIG.TIMEOUT)
+      
       console.log(`📡 Response received for ${url}:`, {
         status: response.status,
         statusText: response.statusText,
@@ -134,6 +134,33 @@ class ApiService {
     return this.request<any>('/')
   }
 
+  // Método para verificar compatibilidad del navegador
+  checkBrowserCompatibility(): { isCompatible: boolean; warnings: string[] } {
+    const warnings: string[] = []
+    let isCompatible = true
+
+    // Verificar APIs esenciales
+    if (typeof fetch === 'undefined') {
+      warnings.push('Fetch API no disponible')
+      isCompatible = false
+    }
+
+    if (typeof Promise === 'undefined') {
+      warnings.push('Promises no disponibles')
+      isCompatible = false
+    }
+
+    if (typeof AbortController === 'undefined') {
+      warnings.push('AbortController no disponible - timeouts limitados')
+    }
+
+    if (isLegacyBrowser()) {
+      warnings.push('Navegador antiguo detectado - funcionalidad limitada')
+    }
+
+    return { isCompatible, warnings }
+  }
+
   async getHealth(): Promise<ApiResponse<any>> {
     return this.request<any>('/health')
   }
@@ -142,11 +169,12 @@ class ApiService {
   async checkServerConnection(): Promise<boolean> {
     try {
       console.log(`🔍 Checking server connection to: ${this.baseURL}`)
-      const response = await fetch(`${this.baseURL}/health`, {
+      
+      // Usar fetchWithTimeout para compatibilidad con navegadores antiguos
+      const response = await fetchWithTimeout(`${this.baseURL}/health`, {
         method: 'GET',
-        headers: API_CONFIG.DEFAULT_HEADERS,
-        signal: AbortSignal.timeout(5000) // 5 segundos timeout
-      })
+        headers: API_CONFIG.DEFAULT_HEADERS
+      }, 5000) // 5 segundos timeout
       
       const isConnected = response.ok
       console.log(`🔍 Server connection check: ${isConnected ? '✅ Connected' : '❌ Failed'}`)

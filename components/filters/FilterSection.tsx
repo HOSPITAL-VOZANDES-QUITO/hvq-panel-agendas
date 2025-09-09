@@ -38,7 +38,7 @@ export const FilterSection = memo(function FilterSection({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
         {/* Búsqueda */}
         <div className="space-y-2">
-          <label className="text-sm font-medium" style={{ color: COLORS.TEXT_DARK }}>Búsqueda</label>
+          <label className="text-xs font-medium" style={{ color: COLORS.TEXT_DARK }}>Búsqueda</label>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4" style={{ color: COLORS.TEXT_MUTED }} />
             <Input
@@ -56,7 +56,7 @@ export const FilterSection = memo(function FilterSection({
 
         {/* Especialidad */}
         <div className="space-y-2">
-          <label className="text-sm font-medium" style={{ color: COLORS.TEXT_DARK }}>Especialidad</label>
+          <label className="text-xs font-medium" style={{ color: COLORS.TEXT_DARK }}>Especialidad</label>
           <Select
             value={filters.especialidad}
             onValueChange={(value) => onFilterChange("especialidad", value)}
@@ -95,7 +95,7 @@ export const FilterSection = memo(function FilterSection({
 
         {/* Edificio */}
         <div className="space-y-2">
-          <label className="text-sm font-medium" style={{ color: COLORS.TEXT_DARK }}>Edificio</label>
+          <label className="text-xs font-medium" style={{ color: COLORS.TEXT_DARK }}>Edificio</label>
           <Select 
             value={filters.edificio} 
             onValueChange={(value) => onFilterChange("edificio", value)}
@@ -132,7 +132,7 @@ export const FilterSection = memo(function FilterSection({
 
         {/* Tipo de Agenda */}
         <div className="space-y-2">
-          <label className="text-sm font-medium" style={{ color: COLORS.TEXT_DARK }}>Tipo de Agenda</label>
+          <label className="text-xs font-medium" style={{ color: COLORS.TEXT_DARK }}>Tipo de Agenda</label>
           <Select 
             value={filters.tipo} 
             onValueChange={(value) => onFilterChange("tipo", value)}

@@ -153,7 +153,7 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
             </PopoverTrigger>
             <PopoverContent className="w-[300px] p-0">
               <Command>
-                <CommandInput placeholder="Buscar especialidad..." />
+                <CommandInput placeholder="Buscar especialidad..." className="[&>div]:!border-b-0" />
                 <CommandList>
                   <CommandEmpty>No se encontró especialidad.</CommandEmpty>
                   <CommandGroup>
@@ -204,7 +204,7 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
             </PopoverTrigger>
             <PopoverContent className="w-[350px] p-0">
               <Command>
-                <CommandInput placeholder="Buscar médico..." />
+                <CommandInput placeholder="Buscar médico..." className="[&>div]:!border-b-0" />
                 <CommandList>
                   <CommandEmpty>No se encontró médico.</CommandEmpty>
                   <CommandGroup>
@@ -332,7 +332,7 @@ export default function MedicalDashboard({ onLogout }: MedicalDashboardProps) {
             </PopoverTrigger>
             <PopoverContent className="w-[250px] p-0">
               <Command>
-                <CommandInput placeholder="Buscar consultorio..." />
+                <CommandInput placeholder="Buscar consultorio..."/>
                 <CommandList>
                   <CommandEmpty>No se encontró consultorio.</CommandEmpty>
                   <CommandGroup>
